@@ -1,0 +1,65 @@
+NOTAE
+© 2026 Maria Paula Moreno · nosecomousarlaia
+Código abierto bajo licencia MIT. El texto legal está en LICENSE;
+esto de aquí es lo mismo explicado en cristiano.
+
+────────────────────────────────────────────────────────
+LO QUE SÍ PUEDES HACER
+────────────────────────────────────────────────────────
+Notae es un regalo. Puedes:
+
+· Usarla todo lo que quieras, para lo que quieras, incluido tu trabajo
+  y tus proyectos que cobran dinero.
+· Instalarla en todos tus computadores.
+· Pasársela a quien quieras, siempre que la pases completa y tal como
+  está, sin cobrar por ella.
+· Hablar de ella, grabar videos usándola, enseñarla y recomendarla.
+· Leer el código, cambiarlo y compilar tu propia versión para ti.
+  El código va con la app y en MODIFICALA.md está cómo empezar.
+· Usar lo que aprendas de este código en tus propios proyectos.
+
+No tienes que pedir permiso para nada de lo anterior.
+
+────────────────────────────────────────────────────────
+LO QUE NO ENTRA
+────────────────────────────────────────────────────────
+Con MIT casi todo está permitido, incluso vender tu versión. Lo que no
+entra en la licencia son dos cosas:
+
+· La marca. «Notae», «nosecomousarlaia», los logotipos y el símbolo de
+  puntos no son parte del permiso. Coge el código, haz lo que quieras
+  con él, pero publícalo con tu nombre y tu ícono, no con los míos. Es
+  para que nadie confunda tu versión con la mía, ni al revés.
+· La tipografía. Instrument Sans va bajo su propia licencia (OFL 1.1),
+  no bajo MIT, y esa licencia viaja con ella.
+
+Lo demás sí: úsala, cámbiala, repártela, véndela, métela en tu producto.
+No hace falta pedir permiso ni avisarme. Lo único que pide MIT es que
+conserves el aviso de copyright y el texto de la licencia.
+
+────────────────────────────────────────────────────────
+SIN GARANTÍAS
+────────────────────────────────────────────────────────
+Notae se entrega tal como está. Está hecha con cariño y probada, pero
+no puedo garantizar que funcione en todos los computadores ni hacerme
+responsable de pérdidas de datos, transcripciones equivocadas o
+decisiones que tomes a partir de lo que escriba.
+
+Guarda lo que sea importante, como harías con cualquier herramienta.
+
+────────────────────────────────────────────────────────
+COMPONENTES DE TERCEROS
+────────────────────────────────────────────────────────
+Notae incluye la tipografía Instrument Sans, publicada bajo la SIL Open
+Font License 1.1. Su licencia completa va dentro de la app, en
+Recursos/Fonts/OFL-InstrumentSans.txt
+
+El reconocimiento de voz y la corrección de texto los hace macOS con
+sus propios modelos. Notae no incluye ni redistribuye ninguno.
+
+────────────────────────────────────────────────────────
+Escrita en lenguaje claro a propósito, no por un abogado. Si algún día
+esto crece y necesitas un texto legal formal, vale la pena revisarlo
+con uno.
+
+nosecomousarlaia.com

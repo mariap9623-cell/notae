@@ -1,0 +1,56 @@
+NOTAE
+Dictado local para Mac. Nada de lo que dices sale de tu computador.
+
+────────────────────────────────
+1. INSTALAR
+────────────────────────────────
+Arrastra Notae al ícono de Aplicaciones que está al lado.
+
+────────────────────────────────
+2. LA PRIMERA VEZ
+────────────────────────────────
+Notae no está firmada con una cuenta de desarrollador de Apple (cuesta 99 dólares
+al año), así que macOS la va a bloquear la primera vez. Es un aviso normal, no
+significa que la app tenga algo malo.
+
+Haz esto una sola vez:
+
+  a. Abre la carpeta Aplicaciones y haz doble clic en Notae.
+  b. Va a salir un aviso. Ciérralo.
+  c. Ve a Ajustes del sistema › Privacidad y seguridad.
+  d. Baja hasta abajo. Vas a ver "Se ha bloqueado el uso de Notae".
+  e. Haz clic en "Abrir de todos modos" y confirma con tu contraseña o Touch ID.
+
+Desde ahí en adelante se abre normal.
+
+────────────────────────────────
+3. PERMISOS
+────────────────────────────────
+Notae pide dos permisos y necesita los dos para funcionar:
+
+  • Micrófono: para escucharte.
+  • Accesibilidad: para detectar la tecla en cualquier app y pegar el texto
+    donde tengas el cursor.
+
+La ventana de bienvenida te lleva a los dos.
+
+────────────────────────────────
+4. USARLA
+────────────────────────────────
+Mantén presionada la tecla fn (la del globo 🌐, abajo a la izquierda) y habla.
+Suelta, y el texto aparece donde esté tu cursor.
+
+Si al presionar fn se abre el selector de emojis:
+Ajustes del sistema › Teclado › "Al presionar 🌐" › No hacer nada.
+
+El ícono del micrófono en la barra de arriba abre los ajustes: idioma, tecla,
+estilo de corrección y tus palabras propias.
+
+────────────────────────────────
+Hecha por @mariapaula_rayo
+© 2026 Maria Paula Moreno · nosecomousarlaia. Código bajo licencia MIT.
+Puedes usarla y pasarla, no venderla. Detalles en LICENCIA.txt
+
+Requisitos: macOS 26 o superior.
+La corrección con IA necesita Apple Intelligence activado (Mac con chip M1 o
+superior). Sin eso, el dictado funciona igual en modo Crudo.

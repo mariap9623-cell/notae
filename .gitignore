@@ -1,0 +1,16 @@
+# Compilación
+.build/
+dist.noindex/
+*.dmg
+
+# macOS
+.DS_Store
+
+# Nada de esto debe salir nunca del computador
+*.env
+.env*
+
+# Notas mías, no van al repo público
+notas-internas/
+Muestrario/
+instalar.sh
