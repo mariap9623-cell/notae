@@ -7,9 +7,9 @@ enum Pegado {
     /// Cuánto esperar antes de devolver el portapapeles a como estaba.
     ///
     /// Esto es la diferencia entre que se pegue lo que dictaste y que se pegue
-    /// lo que tenías copiado de antes. ⌘V no es instantáneo: Chrome, Slack,
-    /// Notion y en general todo lo que sea Electron leen el portapapeles por
-    /// IPC y tardan. Si restauramos antes de que lean, leen el respaldo y pegan
+    /// lo que tenías copiado de antes. ⌘V no es instantáneo: los navegadores y
+    /// todo lo que esté hecho con tecnologías web leen el portapapeles por IPC
+    /// y tardan. Si restauramos antes de que lean, leen el respaldo y pegan
     /// eso. Con 0.6 s fallaba a ratos; 1.8 s le da aire a las apps lentas y no
     /// molesta, porque para entonces ya te fuiste a seguir escribiendo.
     private static let esperaRestaurar: TimeInterval = 1.8

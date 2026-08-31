@@ -4,7 +4,7 @@ Dictado local para Mac, de **nosecomousarlaia**. Mantienes una tecla, hablas, y
 el texto aparece donde tengas el cursor. Nada de lo que dices sale del
 computador y no hay suscripción.
 
-Reemplaza a Wispr Flow usando lo que ya trae macOS 26:
+Reemplaza al dictado por suscripción usando lo que ya trae macOS 26:
 
 | pieza | qué usa |
 |---|---|
@@ -27,9 +27,10 @@ pesado y no manda tu voz a ningún servidor. El precio de esa decisión es que
   automática.
 - El idioma de dictado se descarga solo la primera vez (es-ES, es-MX, es-CL, es-US).
 
-Si tu Mac no cumple, no insistas: **[Handy](https://handy.computer)** hace lo
-mismo, es gratis, también es código abierto y corre desde macOS 13, en Intel y
-también en Windows y Linux. Trae sus propios modelos, así que pesa bastante más.
+Si tu Mac no cumple, hay otras herramientas de dictado de código abierto que
+traen sus propios modelos en vez de usar los de Apple: funcionan en Macs más
+antiguos y en Intel, a cambio de pesar bastante más. Búscalas, no te quedes sin
+dictado por esto.
 
 ## macOS la va a bloquear la primera vez
 

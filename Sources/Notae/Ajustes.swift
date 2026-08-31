@@ -78,7 +78,7 @@ enum EstiloLimpieza: String, CaseIterable, Identifiable {
         case .crudo: return "Pega exactamente lo que entendió el dictado. Instantáneo."
         case .fiel: return "Quita eeeh, o sea, este… y pone comas y puntos. No cambia tus palabras."
         case .natural: return "Además corta las frases largas y quita repeticiones. Sigue siendo tu voz."
-        case .mensaje: return "Lo convierte en un mensaje limpio para WhatsApp, Slack o correo."
+        case .mensaje: return "Lo convierte en un mensaje limpio, listo para enviar por chat o correo."
         }
     }
 
