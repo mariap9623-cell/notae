@@ -21,6 +21,11 @@ final class Dictado: ObservableObject {
     /// Nivel de audio 0...1 para el medidor del HUD.
     @Published private(set) var nivel: Double = 0
 
+    /// Se llama cada vez que el motor da por cerrada una frase, todavía con el
+    /// micrófono abierto. Es lo que permite ir limpiando mientras hablas en vez
+    /// de hacerlo todo al soltar la tecla.
+    var alCerrarFrase: ((String) -> Void)?
+
     private let motorAudio = AVAudioEngine()
     private var transcriptor: SpeechTranscriber?
     private var analizador: SpeechAnalyzer?
@@ -148,6 +153,8 @@ final class Dictado: ObservableObject {
                         if resultado.isFinal {
                             self.textoFinal += texto
                             self.textoVolatil = ""
+                            // Ya no cambia: se puede ir limpiando desde ahora.
+                            self.alCerrarFrase?(texto)
                         } else {
                             self.textoVolatil = texto
                         }
@@ -176,9 +183,20 @@ final class Dictado: ObservableObject {
         }
     }
 
+    /// Lo que hay al soltar la tecla, partido en dos: las frases que el motor
+    /// ya cerró mientras hablabas (que la limpieza viene procesando desde hace
+    /// rato) y la cola que nadie ha cerrado todavía.
+    struct Cierre {
+        var cerrado = ""
+        var cola = ""
+        var completo: String {
+            (cerrado + cola).trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+    }
+
     /// Corta la grabación y devuelve el texto completo ya finalizado.
-    func terminar() async -> String {
-        guard case .escuchando = estado else { return "" }
+    func terminar() async -> Cierre {
+        guard case .escuchando = estado else { return Cierre() }
         estado = .procesando
 
         motorAudio.inputNode.removeTap(onBus: 0)
@@ -193,9 +211,9 @@ final class Dictado: ObservableObject {
             _ = await self?.tareaResultados?.value
         }
 
-        let texto = (textoFinal + textoVolatil).trimmingCharacters(in: .whitespacesAndNewlines)
+        let cierre = Cierre(cerrado: textoFinal, cola: textoVolatil)
         await limpiar()
-        return texto
+        return cierre
     }
 
     /// Corre algo y se rinde si tarda demasiado. Lo que importa es que el

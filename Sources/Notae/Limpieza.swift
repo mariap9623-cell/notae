@@ -69,7 +69,8 @@ final class Limpieza {
                   estilo: EstiloLimpieza,
                   reglas: [String],
                   vocabulario: [String],
-                  atajos: [(dicho: String, escribe: String)] = []) async -> String {
+                  atajos: [(dicho: String, escribe: String)] = [],
+                  esFragmento: Bool = false) async -> String {
 
         // Los atajos se aplican antes que la IA: así el modelo ve el correo ya
         // escrito y no intenta "arreglarlo".
@@ -77,15 +78,22 @@ final class Limpieza {
         let base = reglasRapidas(conAtajos)
         guard estilo.usaIA, iaDisponible, base.count > 1 else { return base }
 
-        let sesion = sesionPara(estilo: estilo, reglas: reglas, vocabulario: vocabulario)
+        let sesion = sesionPara(estilo: estilo, reglas: reglas, vocabulario: vocabulario,
+                                entrante: base.count)
         let inicio = Date()
+        // Una frase suelta puede empezar o acabar a media idea. Si no se avisa,
+        // el modelo la "completa" y se inventa el final.
+        let fragmentoAviso = "Fragmento de un dictado (puede empezar o terminar a"
+            + " media frase; límpialo tal como está, no lo completes ni le"
+            + " agregues un final):"
+        let encabezado = esFragmento ? fragmentoAviso : "Texto dictado:"
         do {
             let respuesta = try await sesion.respond(
-                to: "Texto dictado:\n\(base)",
+                to: "\(encabezado)\n\(base)",
                 options: GenerationOptions(temperature: 0.1)
             )
             gastadoEnSesion += base.count + respuesta.content.count
-            Registro.di("ia: \(String(format: "%.2f", Date().timeIntervalSince(inicio))) s para \(base.count) caracteres · sesión lleva \(gastadoEnSesion)")
+            Registro.di("ia\(esFragmento ? "-frase" : ""): \(String(format: "%.2f", Date().timeIntervalSince(inicio))) s para \(base.count) caracteres · sesión lleva \(gastadoEnSesion)")
             let salida = depurarSalida(respuesta.content)
             return salida.isEmpty ? base : reglasRapidas(salida)
         } catch {
@@ -98,6 +106,58 @@ final class Limpieza {
         }
     }
 
+    // MARK: - Limpieza por frases (mientras todavía hablas)
+
+    /// La última frase encolada. Cada nueva espera a la anterior: el modelo
+    /// atiende de a una, y pedirle dos respuestas a la misma sesión al tiempo
+    /// es un error. Encadenarlas aquí es lo que lo evita.
+    private var ultimaEnFila: Task<String, Never>?
+
+    /// ¿La IA va a correr con este estilo? Si no, no hay nada que adelantar.
+    func usaIA(_ estilo: EstiloLimpieza) -> Bool { estilo.usaIA && iaDisponible }
+
+    /// Manda una frase a limpiar ya, sin esperar a que sueltes la tecla.
+    /// Devuelve la tarea para poder recoger el resultado en orden.
+    @discardableResult
+    func encolar(_ fragmento: String,
+                 estilo: EstiloLimpieza,
+                 reglas: [String],
+                 vocabulario: [String],
+                 atajos: [(dicho: String, escribe: String)] = [],
+                 esFragmento: Bool = true) -> Task<String, Never> {
+        let previa = ultimaEnFila
+        let tarea = Task { [weak self] in
+            _ = await previa?.value
+            guard let self else { return fragmento }
+            return await self.procesar(fragmento,
+                                       estilo: estilo,
+                                       reglas: reglas,
+                                       vocabulario: vocabulario,
+                                       atajos: atajos,
+                                       esFragmento: esFragmento)
+        }
+        ultimaEnFila = tarea
+        return tarea
+    }
+
+    /// Cierra la fila del dictado que acaba de terminar. La siguiente frase
+    /// empieza una nueva cadena y no se queda esperando a la del dictado viejo.
+    func vaciarFila() {
+        ultimaEnFila = nil
+    }
+
+    /// Pega las frases ya limpias en un texto solo.
+    func unir(_ partes: [String]) -> String {
+        var salida = ""
+        for parte in partes {
+            let p = parte.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !p.isEmpty else { continue }
+            if salida.isEmpty { salida = p; continue }
+            salida += salida.hasSuffix("\n") ? p : " " + p
+        }
+        return salida
+    }
+
     // MARK: - Sesión
 
     /// Una sesión nueva por dictado, a propósito.
@@ -108,16 +168,23 @@ final class Limpieza {
     /// por qué. Los dictados no tienen nada que ver entre sí, así que no hay
     /// nada que conservar. Lo caro es cargar el modelo, y eso ya quedó hecho
     /// por `precalentar` y vive mientras viva la app.
-    private func sesionPara(estilo: EstiloLimpieza, reglas: [String], vocabulario: [String]) -> LanguageModelSession {
+    private func sesionPara(estilo: EstiloLimpieza, reglas: [String], vocabulario: [String],
+                            entrante: Int) -> LanguageModelSession {
         let texto = instrucciones(estilo: estilo, reglas: reglas, vocabulario: vocabulario)
         defer { instruccionesCacheadas = texto }
 
         // Reutilizar la sesión es lo que más acelera: medido en 18 dictados,
         // 0.441 s de mediana creando una cada vez contra 0.332 s reutilizando.
         // El modelo ya tiene digeridas las instrucciones y no las vuelve a leer.
+        //
+        // El tope se mide contra lo que la sesión va a tener DESPUÉS de esta
+        // llamada (lo que entra más una respuesta de tamaño parecido), no
+        // contra lo que ya tiene. Medirlo antes dejaba pasar esto, visto en el
+        // log: sesión con 1136, entra un dictado de 587, termina en 2304 y la
+        // limpieza tarda 6.74 s en vez de ~2.
         if let viva = sesion,
            instruccionesCacheadas == texto,
-           gastadoEnSesion < Self.topeCaracteresPorSesion {
+           gastadoEnSesion + 2 * entrante <= Self.topeCaracteresPorSesion {
             return viva
         }
 

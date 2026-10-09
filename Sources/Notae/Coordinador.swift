@@ -43,6 +43,9 @@ final class Coordinador: ObservableObject {
     private var modoNota = false
     /// Corta un dictado que se quedó abierto.
     private var tope: Timer?
+    /// Las frases que ya se están limpiando mientras hablas, en orden de
+    /// llegada. Al soltar la tecla solo queda esperar lo que falte.
+    private var piezas: [Task<String, Never>] = []
     /// Cinco minutos: de sobra para cualquier dictado, y suficiente para que
     /// nada se quede colgado toda la tarde.
     private static let topeSegundos: TimeInterval = 300
@@ -82,6 +85,8 @@ final class Coordinador: ObservableObject {
             guard let self else { return }
             self.hud.mostrarTexto = self.ajustes.mostrarTexto
         }
+
+        dictado.alCerrarFrase = { [weak self] frase in self?.frasePendiente(frase) }
 
         dictado.$enVivo
             .receive(on: RunLoop.main)
@@ -203,6 +208,8 @@ final class Coordinador: ObservableObject {
             return
         }
         trabajando = true; dictandoAhora = true
+        piezas.removeAll()
+        limpieza.vaciarFila()
         hud.texto = ""
         hud.fase = .escuchando
         panel.mostrar()
@@ -229,6 +236,20 @@ final class Coordinador: ObservableObject {
         }
     }
 
+    /// El motor cerró una frase y el micrófono sigue abierto: se manda a
+    /// limpiar ahora mismo. Esto es lo que evita que la espera crezca con lo
+    /// largo del dictado; al soltar la tecla solo falta la última frase.
+    private func frasePendiente(_ frase: String) {
+        let limpia = frase.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trabajando, !limpia.isEmpty, limpieza.usaIA(ajustes.estilo) else { return }
+        Registro.di("frase: \(limpia.count) caracteres · a limpiar en vivo (van \(piezas.count + 1))")
+        piezas.append(limpieza.encolar(limpia,
+                                       estilo: ajustes.estilo,
+                                       reglas: ajustes.listaReglas,
+                                       vocabulario: ajustes.listaVocabulario,
+                                       atajos: ajustes.listaAtajos))
+    }
+
     /// Devuelve la app al estado en que se puede volver a dictar.
     ///
     /// Todo lo que corta un dictado pasa por aquí. Que exista un solo sitio es
@@ -239,6 +260,8 @@ final class Coordinador: ObservableObject {
         trabajando = false
         dictandoAhora = false
         modoNota = false
+        piezas.removeAll()
+        limpieza.vaciarFila()
     }
 
     /// Tope de duración. Sin esto, un dictado que nunca recibe su «terminar»
@@ -263,9 +286,10 @@ final class Coordinador: ObservableObject {
         let eraNota = modoNota
 
         Task {
-            let crudo = await dictado.terminar()
+            let cierre = await dictado.terminar()
             dictado.volverAInactivo()
-            Registro.di("dictado: \(crudo.count) caracteres · «\(crudo.prefix(60))»")
+            let crudo = cierre.completo
+            Registro.di("dictado: \(crudo.count) caracteres · \(piezas.count) frases ya limpiándose · cola \(cierre.cola.trimmingCharacters(in: .whitespacesAndNewlines).count) · «\(crudo.prefix(60))»")
 
             guard !crudo.isEmpty else {
                 soltar()
@@ -277,13 +301,36 @@ final class Coordinador: ObservableObject {
                 hud.fase = .procesando
             }
 
-            let final = await limpieza.procesar(
-                crudo,
-                estilo: ajustes.estilo,
-                reglas: ajustes.listaReglas,
-                vocabulario: ajustes.listaVocabulario,
-                atajos: ajustes.listaAtajos
-            )
+            let final: String
+            if piezas.isEmpty {
+                // Sin IA, o nada se cerró mientras hablabas: camino de siempre.
+                final = await limpieza.procesar(
+                    crudo,
+                    estilo: ajustes.estilo,
+                    reglas: ajustes.listaReglas,
+                    vocabulario: ajustes.listaVocabulario,
+                    atajos: ajustes.listaAtajos
+                )
+            } else {
+                // Casi todo ya está hecho. Solo falta la cola (lo que el motor
+                // no alcanzó a cerrar) y recoger las frases en orden.
+                let cola = cierre.cola.trimmingCharacters(in: .whitespacesAndNewlines)
+                if !cola.isEmpty {
+                    piezas.append(limpieza.encolar(cola,
+                                                   estilo: ajustes.estilo,
+                                                   reglas: ajustes.listaReglas,
+                                                   vocabulario: ajustes.listaVocabulario,
+                                                   atajos: ajustes.listaAtajos))
+                }
+                let enFila = piezas
+                piezas = []
+                limpieza.vaciarFila()
+                let espera = Date()
+                var partes: [String] = []
+                for tarea in enFila { partes.append(await tarea.value) }
+                final = limpieza.unir(partes)
+                Registro.di("fila: \(String(format: "%.2f", Date().timeIntervalSince(espera))) s esperando \(enFila.count) frases")
+            }
 
             // Si pediste escribir en otro idioma, se traduce antes de pegar.
             var salida = final
